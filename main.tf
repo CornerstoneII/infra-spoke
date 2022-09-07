@@ -23,7 +23,7 @@ module "spoke-infra" {
 
 }
 
-module "other-infra" {
-  source = "./modules/other-module"
+# module "other-infra" {
+#   source = "./modules/other-module"
 
-}
+# }
