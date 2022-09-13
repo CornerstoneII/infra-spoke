@@ -289,3 +289,12 @@ resource "azurerm_private_endpoint" "hub_ncus_blob_pep" {
     subresource_names              = ["blob"]
   }
 }
+
+
+resource "azurerm_log_analytics_workspace" "hub_ncus_law" {
+  name                = "hub-ncus-law"
+  location            = azurerm_resource_group.hub_ncus_law_rg.location
+  resource_group_name = azurerm_resource_group.hub_ncus_law_rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
