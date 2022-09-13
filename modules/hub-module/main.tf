@@ -54,7 +54,7 @@ resource "azurerm_resource_group" "hub_ncus_law_rg" {
 
 
 /*
-    SECTION 2:
+  SECTION 2:
 
 */
 ## Create Hub Virtual Network
@@ -87,6 +87,8 @@ resource "azurerm_subnet" "hub_ncus_net_stg_sn" {
   resource_group_name  = azurerm_resource_group.hub_ncus_net_rg.name
   virtual_network_name = azurerm_virtual_network.hub_ncus_vnt.name
   address_prefixes     = var.hub_ncus_net_stg_sn_address
+
+  private_endpoint_network_policies_enabled = true
 }
 
 ## Create GatewaySubnet
@@ -133,14 +135,12 @@ resource "azurerm_subnet_network_security_group_association" "hub-ncus-appgw-nsg
   network_security_group_id = azurerm_network_security_group.hub_ncus_appgw_nsg.id
 }
 
-
 # ***hub-ncus-mgt-nsg***
 resource "azurerm_subnet_network_security_group_association" "hub-ncus-mgt-nsg" {
   # depends_on                = [azurerm_network_security_rule.hub_ncus_mgt_nsg_inbound]
   subnet_id                 = azurerm_subnet.hub_ncus_net_mgt_sn.id
   network_security_group_id = azurerm_network_security_group.hub_ncus_mgt_nsg.id
 }
-
 
 # ***hub-ncus-net-mon_sn***
 resource "azurerm_subnet_network_security_group_association" "hub_ncus_net_mon_sn" {
@@ -191,3 +191,6 @@ resource "azurerm_network_security_rule" "hub_ncus_mgt_nsg_inbound" {
   resource_group_name         = azurerm_resource_group.hub_ncus_nsg_rg.name
   network_security_group_name = azurerm_network_security_group.hub_ncus_mgt_nsg.name
 }
+
+
+
