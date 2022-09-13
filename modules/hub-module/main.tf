@@ -98,6 +98,8 @@ resource "azurerm_subnet" "GatewaySubnet" {
   resource_group_name  = azurerm_resource_group.hub_ncus_net_rg.name
   virtual_network_name = azurerm_virtual_network.hub_ncus_vnt.name
   address_prefixes     = var.GatewaySubnet_address
+
+  private_endpoint_network_policies_enabled = true
 }
 
 ## Create Log Analytics Subnet
@@ -293,8 +295,38 @@ resource "azurerm_private_endpoint" "hub_ncus_blob_pep" {
 
 resource "azurerm_log_analytics_workspace" "hub_ncus_law" {
   name                = "hub-ncus-law"
-  location            = azurerm_resource_group.hub_ncus_law_rg.location
-  resource_group_name = azurerm_resource_group.hub_ncus_law_rg.name
+  location            = azurerm_resource_group.hub_ncus_net_rg.location
+  resource_group_name = azurerm_resource_group.hub_ncus_net_rg.name
   sku                 = "PerGB2018"
   retention_in_days   = 30
+}
+
+
+
+resource "azurerm_public_ip" "hub_ncus_gw_pip" {
+  name                = "hub_ncus_gw_pip"
+  location            = azurerm_resource_group.hub_ncus_net_rg.location
+  resource_group_name = azurerm_resource_group.hub_ncus_net_rg.name
+  allocation_method   = "Dynamic"
+  sku                 = "Basic"
+}
+
+
+resource "azurerm_virtual_network_gateway" "hub_ncus_vpn_gw" {
+  name                = "hub-ncus-gw"
+  resource_group_name = azurerm_resource_group.hub_ncus_net_rg.name
+  location            = azurerm_resource_group.hub_ncus_net_rg.location
+  type                = "Vpn"
+  vpn_type            = "RouteBased"
+  sku                 = "VpnGw1"
+  active_active       = false
+  generation          = "Generation1"
+  # tags                = var.tags
+
+  ip_configuration {
+    name                          = "ipGatewayConfig"
+    public_ip_address_id          = azurerm_public_ip.hub_ncus_gw_pip.id
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = azurerm_subnet.GatewaySubnet.id
+  }
 }

@@ -144,7 +144,7 @@ resource "azurerm_network_security_rule" "sbx_ncus_vmss_nsg_inbound" {
 
 # Resource-10: Create a Key Vault
 resource "azurerm_key_vault" "sbx_ncus_kvt" {
-  name                        = "sbx-ncus-kvt"
+  name                        = "sbx-ncus-kvt0001"
   resource_group_name         = azurerm_resource_group.sbx_ncus_kvt_rg.name
   location                    = azurerm_resource_group.sbx_ncus_kvt_rg.location
   enabled_for_disk_encryption = true
@@ -179,7 +179,7 @@ resource "azurerm_key_vault_secret" "sbx_ncus_db_secret" {
 
 # Creating Mysql server
 resource "azurerm_mysql_server" "sbx_ncus_server" {
-  name                = "mysqlserveradmin"
+  name                = "mysqlserveradmin0001"
   location            = azurerm_resource_group.sbx_ncus_db_rg.location
   resource_group_name = azurerm_resource_group.sbx_ncus_db_rg.name
 
