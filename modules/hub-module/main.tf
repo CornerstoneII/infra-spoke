@@ -1,3 +1,4 @@
+data "azurerm_client_config" "current" {}
 /*
     CREATED RESOURCES:
     RG, VNET, SUBNET
@@ -136,7 +137,7 @@ resource "azurerm_subnet_network_security_group_association" "hub-ncus-appgw-nsg
 }
 
 # ***hub-ncus-mgt-nsg***
-resource "azurerm_subnet_network_security_group_association" "hub-ncus-mgt-nsg" {
+resource "azurerm_subnet_network_security_group_association" "hub_ncus_mgt_nsg" {
   # depends_on                = [azurerm_network_security_rule.hub_ncus_mgt_nsg_inbound]
   subnet_id                 = azurerm_subnet.hub_ncus_net_mgt_sn.id
   network_security_group_id = azurerm_network_security_group.hub_ncus_mgt_nsg.id
@@ -185,12 +186,106 @@ resource "azurerm_network_security_rule" "hub_ncus_mgt_nsg_inbound" {
   access                      = "Allow"
   protocol                    = "Tcp"
   source_port_range           = "*"
-  destination_port_range      = "443"
+  destination_port_range      = "22"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.hub_ncus_nsg_rg.name
   network_security_group_name = azurerm_network_security_group.hub_ncus_mgt_nsg.name
 }
 
+# Resource-5: Create Public IP Address
+resource "azurerm_public_ip" "hub_ncus_mgt_publicip" {
+  name                = "hub-ncus-mgt-publicip"
+  resource_group_name = azurerm_resource_group.hub_ncus_mgt_rg.name
+  location            = azurerm_resource_group.hub_ncus_mgt_rg.location
+  allocation_method   = "Static"
+  tags = {
+    environment = "Dev"
+  }
+}
+
+# Resource-6: Create Network Interface
+resource "azurerm_network_interface" "hub_ncus_mgt_nic" {
+  name                = "hub-ncus-mgt-nic"
+  location            = azurerm_resource_group.hub_ncus_mgt_rg.location
+  resource_group_name = azurerm_resource_group.hub_ncus_mgt_rg.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.hub_ncus_net_mgt_sn.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.hub_ncus_mgt_publicip.id
+  }
+}
 
 
+# Resource-8: Associate NSG and Linux VM NIC
+resource "azurerm_network_interface_security_group_association" "vmnic_nsg_associate" {
+  depends_on                = [azurerm_network_security_rule.hub_ncus_mgt_nsg_inbound]
+  network_interface_id      = azurerm_network_interface.hub_ncus_mgt_nic.id
+  network_security_group_id = azurerm_network_security_group.hub_ncus_mgt_nsg.id
+}
+
+# Resource-10: Create a Linux Virtual Machine
+resource "azurerm_linux_virtual_machine" "hub_ncus_mgt" {
+  name                = "hub-ncus-mgt"
+  resource_group_name = azurerm_resource_group.hub_ncus_mgt_rg.name
+  location            = azurerm_resource_group.hub_ncus_mgt_rg.location
+  size                = "Standard_F2"
+  admin_username      = "adminuser"
+  network_interface_ids = [
+    azurerm_network_interface.hub_ncus_mgt_nic.id,
+  ]
+
+  admin_password                  = "QWertyuiopasdfghjkl@123"
+  disable_password_authentication = false
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "16.04-LTS"
+    version   = "latest"
+  }
+}
+
+
+
+
+
+# Create Storage Account
+resource "azurerm_storage_account" "hubncusstg" {
+  name                = "hubncusstg"
+  resource_group_name = azurerm_resource_group.hub_ncus_stg_rg.name
+  location            = azurerm_resource_group.hub_ncus_stg_rg.location
+
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+# Create Azure Storage Account Network Rules
+resource "azurerm_storage_account_network_rules" "rules" {
+  storage_account_id = azurerm_storage_account.hubncusstg.id
+  default_action     = "Deny"
+  bypass             = ["Metrics", "Logging", "AzureServices"]
+}
+
+
+# Resource-10: Create a Private Endpoint
+resource "azurerm_private_endpoint" "hub_ncus_blob_pep" {
+  name                = "hub-ncus-blob-pep"
+  location            = azurerm_resource_group.hub_ncus_stg_pep_rg.location
+  resource_group_name = azurerm_resource_group.hub_ncus_stg_pep_rg.name
+  subnet_id           = azurerm_subnet.hub_ncus_net_mgt_sn.id
+  private_service_connection {
+    name                           = "hub_ncus_blob_psc"
+    private_connection_resource_id = azurerm_storage_account.hubncusstg.id
+    is_manual_connection           = false
+    subresource_names              = ["blob"]
+  }
+}
