@@ -139,3 +139,18 @@ variable "sbx_ncus_vmss_nsg" {
   type        = string
   default     = "sbx-ncus-vmss-nsg"
 }
+
+
+variable "web_linuxvm_instance_count" {
+  description = "Number of VM"
+  type        = number
+  default     = 3
+}
+
+
+# Linux VM Input Variables Placeholder file.
+variable "web_vmss_nsg_inbound_ports" {
+  description = "Web VMSS NSG Inbound Ports"
+  type        = list(string)
+  default     = [22, 80, 443]
+}
