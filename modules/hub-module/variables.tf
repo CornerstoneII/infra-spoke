@@ -86,7 +86,7 @@ variable "GatewaySubnet_address" {
 variable "hub_ncus_net_mon_sn" {
   description = "Log Analytics Subnet Name"
   type        = string
-  default     = "hub-ncus-net-mon-sn"
+  default     = "hub-ncus-net-mon-sn001"
 }
 # Log Analytics Address Space
 variable "hub_ncus_net_mon_sn_address" {

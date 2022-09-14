@@ -110,6 +110,22 @@ resource "azurerm_network_security_group" "sbx_ncus_vmss_nsg" {
 }
 
 
+# ***sbx-ncus-kvt-nsg***
+resource "azurerm_network_security_group" "sbx_ncus_kvt_nsg" {
+  name                = var.sbx_ncus_kvt_nsg
+  location            = azurerm_resource_group.sbx_ncus_net_rg.location
+  resource_group_name = azurerm_resource_group.sbx_ncus_nsg_rg.name
+}
+
+
+# ***hub-ncus-db-nsg***
+resource "azurerm_network_security_group" "sbx_ncus_db_nsg" {
+  name                = var.sbx_ncus_db_nsg
+  location            = azurerm_resource_group.sbx_ncus_net_rg.location
+  resource_group_name = azurerm_resource_group.sbx_ncus_nsg_rg.name
+}
+
+
 # Resource-1: Create Public IP Address for Azure Load Balancer
 
 resource "azurerm_public_ip" "sbx_ncus_lb_publicip" {
@@ -208,53 +224,24 @@ resource "azurerm_linux_virtual_machine_scale_set" "sbx_ncus_vmss_webapp" {
     version   = "latest"
   }
 }
-## ASSOCIATE NSG AND SUBNET
 
-# ***sbx_ncus_net_vmss_sn***
-# resource "azurerm_subnet_network_security_group_association" "sbx_ncus_net_vmss_sn" {
-#   # depends_on                = [azurerm_network_security_rule.sbx_ncus_vmss_nsg_inbound]
-#   subnet_id                 = azurerm_subnet.sbx_ncus_net_vmss_sn.id
-#   network_security_group_id = azurerm_network_security_group.sbx_ncus_vmss_nsg.id
-# }
+
+
+
+## ASSOCIATE NSG AND SUBNET
 
 # ***sbx_ncus_net_kvt_sn***
 resource "azurerm_subnet_network_security_group_association" "sbx_ncus_net_kvt_sn" {
-  # depends_on                = [azurerm_network_security_rule.sbx_ncus_vmss_nsg_inbound]
   subnet_id                 = azurerm_subnet.sbx_ncus_net_kvt_sn.id
-  network_security_group_id = azurerm_network_security_group.sbx_ncus_vmss_nsg.id
+  network_security_group_id = azurerm_network_security_group.sbx_ncus_kvt_nsg.id
 }
 
-# ***sbx_ncus_net_lb_sn***
-resource "azurerm_subnet_network_security_group_association" "sbx_ncus_net_lb_sn" {
-  # depends_on                = [azurerm_network_security_rule.sbx_ncus_vmss_nsg_inbound] # Every NSG Rule Association will disassociate NSG from Subnet and Associate it, so we associate it only after NSG is completely created - Azure Provider Bug https://github.com/terraform-providers/terraform-provider-azurerm/issues/354
-  subnet_id                 = azurerm_subnet.sbx_ncus_net_lb_sn.id
-  network_security_group_id = azurerm_network_security_group.sbx_ncus_vmss_nsg.id
-}
 
 # ***sbx_ncus_net_db_sn***
 resource "azurerm_subnet_network_security_group_association" "sbx_ncus_net_db_sn" {
-  # depends_on                = [azurerm_network_security_rule.sbx_ncus_vmss_nsg_inbound] # Every NSG Rule Association will disassociate NSG from Subnet and Associate it, so we associate it only after NSG is completely created - Azure Provider Bug https://github.com/terraform-providers/terraform-provider-azurerm/issues/354
   subnet_id                 = azurerm_subnet.sbx_ncus_net_db_sn.id
-  network_security_group_id = azurerm_network_security_group.sbx_ncus_vmss_nsg.id
+  network_security_group_id = azurerm_network_security_group.sbx_ncus_db_nsg.id
 }
-
-
-## CREATE NSG RULES
-
-resource "azurerm_network_security_rule" "sbx_ncus_vmss_nsg_inbound" {
-  name                        = "Inbound-Rule"
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "443"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.sbx_ncus_nsg_rg.name
-  network_security_group_name = azurerm_network_security_group.sbx_ncus_vmss_nsg.name
-}
-
 
 
 # Resource-10: Create a Key Vault

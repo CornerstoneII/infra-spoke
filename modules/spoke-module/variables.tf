@@ -97,7 +97,7 @@ variable "sbx_ncus_nsg_name" {
 }
 
 variable "sbx_ncus_webapp_name" {
-  description = "Sbx WebApp Resource Group Name"
+  description = "Sbx WebApp/VMSS Resource Group Name"
   type        = string
   default     = "sbx-ncus-webapp-rg"
 }
@@ -120,10 +120,26 @@ variable "sbx_ncus_db_name" {
   default     = "sbx-ncus-db-rg"
 }
 
+
+
 variable "sbx_ncus_kvt_name" {
   description = "Sbx Azure Key Vault Resource Group Name"
   type        = string
   default     = "sbx-ncus-kvt-rg"
+}
+
+
+variable "sbx_ncus_kvt_nsg" {
+  description = "Sbx Azure Key Vault NSG Name"
+  type        = string
+  default     = "sbx-ncus-kvt-nsg"
+}
+
+
+variable "sbx_ncus_db_nsg" {
+  description = "Sbx Azure DB NSG Name"
+  type        = string
+  default     = "sbx-ncus-db-nsg"
 }
 
 
